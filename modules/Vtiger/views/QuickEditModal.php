@@ -64,7 +64,8 @@ class Vtiger_QuickEditModal_View extends \App\Controller\Modal
 		$viewer = $this->getViewer($request);
 		$viewer->assign('RECORD_STRUCTURE', $recordStructure);
 		$layout = $request->getByType('showLayout') ?: Config\Performance::$quickEditLayout ?? 'blocks';
-		if ('blocks' === $layout && 'Calendar' !== $moduleName) {
+		$layout = 'Calendar' === $moduleName ? 'standard' : $layout;
+		if ('blocks' === $layout) {
 			$layout = 'blocks';
 			$blockModels = $moduleModel->getBlocks();
 			$blockRecordStructure = $blockIdFieldMap = [];
@@ -92,7 +93,6 @@ class Vtiger_QuickEditModal_View extends \App\Controller\Modal
 		$viewer->assign('MODULE_MODEL', $moduleModel);
 		$viewer->assign('VIEW', $request->getByType('view', 1));
 		$viewer->assign('MODE', 'edit');
-		$viewer->assign('SCRIPTS', $this->getFooterScripts($request));
 		$viewer->assign('MAX_UPLOAD_LIMIT_MB', Vtiger_Util_Helper::getMaxUploadSize());
 		$viewer->assign('MAX_UPLOAD_LIMIT', \App\Config::main('upload_maxsize'));
 		$viewer->view('Modals/QuickEdit.tpl', $request->getModule());
@@ -101,7 +101,7 @@ class Vtiger_QuickEditModal_View extends \App\Controller\Modal
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getFooterScripts(App\Request $request)
+	public function getModalScripts(App\Request $request)
 	{
 		$moduleName = $request->getModule();
 		return $this->checkAndConvertJsScripts([

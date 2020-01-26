@@ -712,6 +712,11 @@ return [
 			'description' => 'Parameter defining how fields are displayed in quick create. Available values: blocks,standard',
 			'validationValues' => ['blocks', 'standard']
 		],
+		'REPORT_RECORD_NUMBERS' => [
+			'default' => 10,
+			'description' => 'Value how much records can be show in report mail',
+			'validation' => '\App\Validator::naturalNumber'
+		],
 	],
 	'relation' => [
 		'COMMENT_MAX_LENGTH' => [
@@ -935,6 +940,10 @@ return [
 				return \in_array($arg, \Users_Totp_Authmethod::ALLOWED_USER_AUTHY_MODE);
 			}
 		],
+		'whitelistIp2fa' => [
+			'default' => [],
+			'description' => "IP address whitelisting.\nAllow access without 2FA."
+		],
 		'CACHE_LIFETIME_SENSIOLABS_SECURITY_CHECKER' => [
 			'default' => 3600,
 			'description' => 'Cache lifetime for SensioLabs security checker.',
@@ -1024,7 +1033,7 @@ return [
 			'description' => 'Sets the type of sound of reminders',
 		],
 		'CHAT' => [
-			'default' => 'sound_1.mp3',
+			'default' => 'sound_2.mp3',
 			'description' => 'Sets the type of sound of chat',
 		],
 		'MAILS' => [
@@ -1070,8 +1079,8 @@ return [
 		],
 		'db_hostname' => [
 			'type' => 'function',
-			'default' => 'return self::$db_server . ":" . self::$db_port;',
-			'description' => 'Gets host name'
+			'default' => 'return self::$db_server . \':\' . self::$db_port;',
+			'description' => 'Gets host name.'
 		],
 		'base' => [
 			'type' => 'function',
@@ -1085,7 +1094,7 @@ return [
 	'tablePrefix' => 'yf_',
 	'charset' => 'utf8',
 ];",
-			'description' => 'Basic database configuration'
+			'description' => 'Basic database configuration.'
 		],
 	]
 ];

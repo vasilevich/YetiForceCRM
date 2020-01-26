@@ -62,7 +62,7 @@ class ConfReport
 	 * @var array
 	 */
 	public static $stability = [
-		'phpVersion' => ['recommended' => '7.2.x, 7.3.x', 'type' => 'Version', 'container' => 'env', 'testCli' => true, 'label' => 'PHP'],
+		'phpVersion' => ['recommended' => '7.2.x, 7.3.x, 7.4.x (dev)', 'type' => 'Version', 'container' => 'env', 'testCli' => true, 'label' => 'PHP'],
 		'protocolVersion' => ['recommended' => '2.0, 1.x', 'type' => 'Version', 'container' => 'env', 'testCli' => false, 'label' => 'PROTOCOL_VERSION'],
 		'error_reporting' => ['recommended' => 'E_ALL & ~E_NOTICE', 'type' => 'ErrorReporting', 'container' => 'php', 'testCli' => true],
 		'output_buffering' => ['recommended' => 'On', 'type' => 'OnOffInt', 'container' => 'php', 'testCli' => true],
@@ -275,12 +275,12 @@ class ConfReport
 		'spaceStorage' => ['container' => 'env', 'type' => 'Space', 'testCli' => false, 'label' => 'SPACE_STORAGE'],
 		'spaceTemp' => ['container' => 'env', 'type' => 'Space', 'testCli' => false, 'label' => 'SPACE_TEMP'],
 		'lastCronStart' => ['container' => 'env', 'testCli' => false, 'label' => 'LAST_CRON_START', 'isHtml' => true],
-		'open_basedir' => ['container' => 'php', 'testCli' => true],
+		'open_basedir' => ['container' => 'php',  'type' => 'NotEmpty', 'testCli' => true, 'mode' => 'showWarnings'],
 		'cacertbundle' => ['recommended' => 'On', 'container' => 'env', 'type' => 'OnOff', 'testCli' => true, 'label' => 'CACERTBUNDLE'],
 		'SSL_CERT_FILE' => ['container' => 'env', 'testCli' => true],
 		'SSL_CERT_DIR' => ['container' => 'env', 'testCli' => true],
-		'openssl.cafile' => ['container' => 'php', 'testCli' => true],
-		'openssl.capath' => ['container' => 'php', 'testCli' => true],
+		'openssl.cafile' => ['container' => 'php',  'type' => 'NotEmpty', 'testCli' => true, 'mode' => 'showWarnings'],
+		'openssl.capath' => ['container' => 'php',  'type' => 'NotEmpty', 'testCli' => true, 'mode' => 'showWarnings'],
 	];
 
 	/**
@@ -304,10 +304,13 @@ class ConfReport
 	public static $writableFilesAndFolders = [
 		'app_data/' => ['type' => 'IsWritable', 'testCli' => true],
 		'app_data/cron.php' => ['type' => 'IsWritable', 'testCli' => true],
-		'app_data/LanguagesUpdater.json' => ['type' => 'IsWritable', 'testCli' => true],
 		'app_data/registration.php' => ['type' => 'IsWritable', 'testCli' => true],
+		'app_data/moduleHierarchy.php' => ['type' => 'IsWritable', 'testCli' => true],
 		'app_data/shop.php' => ['type' => 'IsWritable', 'testCli' => true],
+		'app_data/icons.php' => ['type' => 'IsWritable', 'testCli' => true],
+		'app_data/LanguagesUpdater.json' => ['type' => 'IsWritable', 'testCli' => true],
 		'app_data/SystemUpdater.json' => ['type' => 'IsWritable', 'testCli' => true],
+		'app_data/libraries.json' => ['type' => 'IsWritable', 'testCli' => true],
 		'app_data/shop/' => ['type' => 'IsWritable', 'testCli' => true],
 		'config/' => ['type' => 'IsWritable', 'testCli' => true],
 		'config/Components' => ['type' => 'IsWritable', 'testCli' => true],
@@ -320,13 +323,19 @@ class ConfReport
 		'cache/addressBook/' => ['type' => 'IsWritable', 'testCli' => true],
 		'cache/images/' => ['type' => 'IsWritable', 'testCli' => true],
 		'cache/import/' => ['type' => 'IsWritable', 'testCli' => true],
+		'cache/mail/' => ['type' => 'IsWritable', 'testCli' => true],
+		'cache/pdf/' => ['type' => 'IsWritable', 'testCli' => true],
 		'cache/logs/' => ['type' => 'IsWritable', 'testCli' => true],
+		'cache/logs/system.log' => ['type' => 'IsWritable', 'testCli' => true],
+		'cache/logs/cron/' => ['type' => 'IsWritable', 'testCli' => true],
 		'cache/session/' => ['type' => 'IsWritable', 'testCli' => true],
 		'cache/templates_c/' => ['type' => 'IsWritable', 'testCli' => true],
 		'cache/upload/' => ['type' => 'IsWritable', 'testCli' => true],
 		'cache/vtlib/' => ['type' => 'IsWritable', 'testCli' => true],
 		'cache/vtlib/HTML' => ['type' => 'IsWritable', 'testCli' => true],
 		'cron/modules/' => ['type' => 'IsWritable', 'testCli' => true],
+		'languages/' => ['type' => 'IsWritable', 'testCli' => true],
+		'install/' => ['type' => 'IsWritable', 'testCli' => true],
 		'modules/' => ['type' => 'IsWritable', 'testCli' => true],
 		'storage/' => ['type' => 'IsWritable', 'testCli' => true],
 		'storage/Products/' => ['type' => 'IsWritable', 'testCli' => true],
@@ -508,7 +517,7 @@ class ConfReport
 				'crmDir' => ROOT_DIRECTORY,
 				'operatingSystem' => 'demo' === \App\Config::main('systemMode') ? php_uname('s') : php_uname(),
 				'serverSoftware' => $_SERVER['SERVER_SOFTWARE'] ?? '-',
-				'currentUser' => get_current_user() . ' [' . getmyuid() . ']',
+				'currentUser' => get_current_user() . ' [' . (getmyuid() ?: '-') . ']',
 				'tempDir' => \App\Fields\File::getTmpPath(),
 				'spaceRoot' => '',
 				'spaceStorage' => '',
@@ -1456,54 +1465,4 @@ class ConfReport
 		return $ver;
 	}
 
-	/**
-	 * Test server speed.
-	 *
-	 * @return array
-	 */
-	public static function testSpeed()
-	{
-		$dir = ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'cache' . \DIRECTORY_SEPARATOR . 'speed' . \DIRECTORY_SEPARATOR;
-		if (!is_dir($dir)) {
-			mkdir($dir, 0755);
-		}
-		$testStartTime = microtime(true);
-		$ram = $cpu = $filesWrite = 0;
-		while ((microtime(true) - $testStartTime) < 1) {
-			file_put_contents("{$dir}{$testStartTime}{$filesWrite}.txt", $testStartTime);
-			++$filesWrite;
-		}
-		$iterator = new \DirectoryIterator($dir);
-		$readS = microtime(true);
-		foreach ($iterator as $item) {
-			if ($item->isFile()) {
-				file_get_contents($item->getPathname());
-			}
-		}
-		$filesRead = $filesWrite / (microtime(true) - $readS);
-		$testStartTime = microtime(true);
-		while ((microtime(true) - $testStartTime) < 1) {
-			$cpuTmp = sha1($cpu);
-			unset($cpuTmp);
-			++$cpu;
-		}
-		$testStartTime = microtime(true);
-		$test = [];
-		while ((microtime(true) - $testStartTime) < 1) {
-			$test[] = [[[$ram]]];
-			unset($test);
-			++$ram;
-		}
-		\vtlib\Functions::recurseDelete('cache/speed');
-		$dbs = microtime(true);
-		\App\Db::getInstance()->createCommand('SELECT BENCHMARK(1000000,1+1);')->execute();
-		$dbe = microtime(true);
-		return [
-			'FilesRead' => (int) $filesRead,
-			'FilesWrite' => $filesWrite,
-			'CPU' => $cpu,
-			'RAM' => $ram,
-			'DB' => (int) (1000000 / ($dbe - $dbs))
-		];
-	}
 }

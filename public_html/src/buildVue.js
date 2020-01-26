@@ -16,11 +16,11 @@ const rollup = require('rollup'),
 	resolve = require('rollup-plugin-node-resolve'),
 	globals = require('rollup-plugin-node-globals'),
 	json = require('@rollup/plugin-json'),
-	babel = require('rollup-plugin-babel'),
-	{ terser } = require('rollup-plugin-terser')
+	buble = require('@rollup/plugin-buble'),
+	{ terser } = require('rollup-plugin-terser'),
+	{ done } = require('@vue/cli-shared-utils')
 
 let filesToMin = []
-const sourcemap = true
 const plugins = [
 	alias({
 		resolve: ['.vue', '.js', '.json'],
@@ -38,26 +38,17 @@ const plugins = [
 			indentedSyntax: true
 		}
 	}),
+	buble({
+		transforms: {
+			arrow: true,
+			modules: false,
+			dangerousForOf: true
+		},
+		objectAssign: 'Object.assign'
+	}),
 	resolve(),
 	commonjs(),
-	globals(),
-	babel({
-		presets: [
-			[
-				'@babel/preset-env',
-				{
-					targets: {
-						ie: '11'
-					}
-				}
-			]
-		],
-		plugins: ['@babel/plugin-transform-typeof-symbol', '@babel/plugin-transform-regenerator'],
-		exclude: [/\/core-js\//],
-		runtimeHelpers: true,
-		sourceMap: true,
-		extensions: ['.js', '.jsx', '.es6', '.es', '.mjs', '.vue']
-	})
+	globals()
 ]
 
 if (process.env.NODE_ENV === 'production') {
@@ -79,33 +70,39 @@ async function build(filePath, isWatched = false) {
 		globals: {
 			vue: 'Vue'
 		},
-		sourcemap
+		sourcemap: true
 	}
 
-	if (process.env.NODE_ENV === 'development') {
-		if (!isWatched) {
-			const watcher = rollup.watch({
-				...inputOptions,
-				output: [outputOptions],
-				watch: {
-					exclude: 'node_modules/**'
-				}
-			})
+	if (process.env.NODE_ENV === 'development' && !isWatched) {
+		const watcher = rollup.watch({
+			...inputOptions,
+			output: [outputOptions],
+			watch: {
+				exclude: 'node_modules/**'
+			}
+		})
 
-			watcher.on('event', event => {
-				if (event.code === 'START') {
-					console.log('Building... ' + filePath)
-					build(filePath, true).then(e => {
-						console.log('Finished! ' + filePath)
-					})
-				}
-			})
-		}
+		watcher.on('event', event => {
+			if (event.code === 'START') {
+				runBuild(filePath, true)
+			}
+		})
+	} else {
+		const bundle = await rollup.rollup(inputOptions)
+		await bundle.generate(outputOptions)
+		await bundle.write(outputOptions)
 	}
+}
 
-	const bundle = await rollup.rollup(inputOptions)
-	const { code, map } = await bundle.generate(outputOptions)
-	await bundle.write(outputOptions)
+function runBuild(file, isWatched = false) {
+	console.log('Building... ' + file)
+	build(file, isWatched)
+		.then(e => {
+			done(file)
+		})
+		.catch(err => {
+			console.log(err)
+		})
 }
 
 finder.on('directory', (dir, stat, stop) => {
@@ -121,7 +118,10 @@ finder.on('file', (file, stat) => {
 
 finder.on('end', () => {
 	filesToMin.forEach(file => {
-		console.log(file)
-		build(file)
+		if (process.env.NODE_ENV === 'development') {
+			build(file)
+		} else {
+			runBuild(file)
+		}
 	})
 })
