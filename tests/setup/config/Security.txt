@@ -48,7 +48,7 @@ class Security
 	public static $PERMITTED_BY_ADVANCED_PERMISSION = true;
 
 	/** Permitted by private field. */
-	public static $PERMITTED_BY_PRIVATE_FIELD = true;
+	public static $PERMITTED_BY_PRIVATE_FIELD = false;
 
 	/** List of modules to which access is based on the record creation. */
 	public static $permittedModulesByCreatorField = [];
@@ -89,12 +89,24 @@ class Security
 	/** Lifetime session (in seconds) */
 	public static $MAX_LIFETIME_SESSION = 21600;
 
+	/** Maximum session lifetime from the time it was created (in minutes) */
+	public static $API_CREATE_LIFETIME_SESSION = 1440;
+
+	/** Maximum session lifetime since the last modification (in minutes) */
+	public static $API_UPDATE_LIFETIME_SESSION = 240;
+
 	/**
 	 * User authentication mode.
 	 *
 	 * @see \Users_Totp_Authmethod::ALLOWED_USER_AUTHY_MODE Available values.
 	 */
 	public static $USER_AUTHY_MODE = 'TOTP_OFF';
+
+	/**
+	 * IP address whitelisting.
+	 * Allow access without 2FA.
+	 */
+	public static $whitelistIp2fa = [];
 
 	/** Cache lifetime for SensioLabs security checker. */
 	public static $CACHE_LIFETIME_SENSIOLABS_SECURITY_CHECKER = 3600;
@@ -103,7 +115,7 @@ class Security
 	public static $loginSessionRegenerate = true;
 
 	/** Force site access to always occur under SSL (https) for selected areas. You will not be able to access selected areas under non-ssl. Note, you must have SSL enabled on your server to utilise this option. */
-	public static $forceHttpsRedirection = true;
+	public static $forceHttpsRedirection = false;
 
 	/** Redirect to proper url when wrong url is entered. */
 	public static $forceUrlRedirection = true;
@@ -124,23 +136,45 @@ class Security
 	public static $csrfFrameBreaker = true;
 
 	/** Which window should be verified? It is used to check if the system is loaded in the frame, used in CSRF. */
-	public static $csrfFrameBreakerWindow = 'top';
+	public static $csrfFrameBreakerWindow = 'parent';
 
-	/** Allowed domains for loading frame, used in CSP. */
-	public static $allowedFrameDomains = [];
+	/** Allowed domains for loading frame, used in CSP and validate referer. */
+	public static $allowedFrameDomains = [
+		'https://outlook.live.com',
+		'https://outlook.office365.com',
+		'https://outlook.office.com',
+	];
 
 	/** Allowed domains for loading images, used in CSP. */
-	public static $allowedImageDomains = ['a.tile.openstreetmap.org', 'b.tile.openstreetmap.org', 'c.tile.openstreetmap.org'];
+	public static $allowedImageDomains = ['*.tile.openstreetmap.org'];
 
 	/** Allowed domains for loading script, used in CSP. */
-	public static $allowedScriptDomains = [];
+	public static $allowedScriptDomains = ['https://appsforoffice.microsoft.com', 'https://ajax.aspnetcdn.com'];
 
 	/** Allowed domains which can be used as the target of a form submissions from a given context, used in CSP. */
-	public static $allowedFormDomains = ['paypal.com'];
+	public static $allowedFormDomains = ['https://www.paypal.com'];
 
 	/** Generally allowed domains, used in CSP. */
 	public static $generallyAllowedDomains = [];
 
 	/** List of allowed domains for fields with HTML support */
 	public static $purifierAllowedDomains = ['yetiforce.com', 'github.com'];
+
+	/** Do you want all connections to be made using a proxy? */
+	public static $proxyConnection = false;
+
+	/** Proxy host */
+	public static $proxyHost = '';
+
+	/** Proxy host */
+	public static $proxyProtocol = 'http';
+
+	/** Proxy port */
+	public static $proxyPort = 0;
+
+	/** Proxy login */
+	public static $proxyLogin = '';
+
+	/** Proxy password */
+	public static $proxyPassword = '';
 }

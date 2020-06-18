@@ -18,6 +18,10 @@ class Vtiger_SaveAjax_Action extends Vtiger_Save_Action
 	 */
 	public function process(App\Request $request)
 	{
+		if ($mode = $request->getMode()) {
+			$this->invokeExposedMethod($mode, $request);
+			return;
+		}
 		$recordModel = $this->saveRecord($request);
 		$fieldModelList = $recordModel->getModule()->getFields();
 		$result = [];
@@ -39,8 +43,8 @@ class Vtiger_SaveAjax_Action extends Vtiger_Save_Action
 		$result['_recordLabel'] = $recordModel->getName();
 		$result['_recordId'] = $recordModel->getId();
 		$recordModel->clearPrivilegesCache();
-		$result['isEditable'] = $recordModel->isEditable();
-		$result['isViewable'] = $recordModel->isViewable();
+		$result['_isEditable'] = $recordModel->isEditable();
+		$result['_isViewable'] = $recordModel->isViewable();
 
 		$response = new Vtiger_Response();
 		$response->setEmitType(Vtiger_Response::$EMIT_JSON);

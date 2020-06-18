@@ -10,7 +10,7 @@
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
-namespace Api\ManageConsents\BaseModule;
+namespace Api\ManageConsents\Approvals;
 
 use OpenApi\Annotations as OA;
 
@@ -26,7 +26,7 @@ class RecordsList extends \Api\ManageConsents\BaseAction
 	/**
 	 * {@inheritdoc}
 	 */
-	public $allowedHeaders = ['x-raw-data', 'x-row-offset', 'x-row-limit'];
+	public $allowedHeaders = ['x-raw-data', 'x-row-offset', 'x-row-limit', 'x-condition'];
 
 	/**
 	 * Gets consents.
@@ -77,14 +77,17 @@ class RecordsList extends \Api\ManageConsents\BaseAction
 	 * 			 	example="1",
 	 *  		 	required=false
 	 * 		),
+	 *		@OA\Parameter(
+	 *		   	name="x-condition",
+	 * 		  	description="Add conditions [Json format]",
+	 * 		 	@OA\JsonContent(ref="#/components/schemas/ApprovalsConditionsRequest"),
+	 *  		in="header",
+	 *  		required=false
+	 * 		),
 	 *		@OA\Response(
 	 *				response=200,
 	 *				description="List of consents",
 	 *				@OA\JsonContent(ref="#/components/schemas/ConsentsResponseBody"),
-	 *				@OA\MediaType(
-	 *						mediaType="text/html",
-	 *						@OA\Schema(ref="#/components/schemas/ConsentsResponseBody")
-	 *				),
 	 *		),
 	 *		@OA\Response(
 	 *				response=401,
@@ -99,23 +102,30 @@ class RecordsList extends \Api\ManageConsents\BaseAction
 	 *				description="Method Not Allowed",
 	 *		),
 	 * ),
+	 * @OA\Schema(
+	 *		schema="ApprovalsConditionsRequest",
+	 *		title="Conditions",
+	 *		description="The list is based on fields in the Consent register module. fieldName - Field name, value - Value, operator - Specific operator, group - true/false. ",
+	 *		type="text",
+	 * 		example={"fieldName" : "approvals_status", "value" : "PLL_ACTIVE", "operator" : "e"}
+	 *	),
 	 * @OA\SecurityScheme(
 	 *		securityScheme="basicAuth",
 	 *		type="http",
-	 *    in="header",
+	 *   	in="header",
 	 *		scheme="basic"
 	 * ),
 	 * @OA\SecurityScheme(
 	 *		securityScheme="ApiKeyAuth",
 	 *   	type="apiKey",
-	 *    in="header",
+	 *    	in="header",
 	 * 		name="X-API-KEY",
 	 *   	description="Webservice api key"
 	 * ),
 	 * @OA\SecurityScheme(
 	 *		securityScheme="token",
 	 *   	type="apiKey",
-	 *    in="header",
+	 *   	in="header",
 	 * 		name="X-TOKEN",
 	 *   	description="Webservice api token by user"
 	 * ),
@@ -227,6 +237,16 @@ class RecordsList extends \Api\ManageConsents\BaseAction
 		$offset = 0;
 		if ($requestOffset = $this->controller->request->getHeader('x-row-offset')) {
 			$offset = (int) $requestOffset;
+		}
+		if ($conditions = $this->controller->request->getHeader('x-condition')) {
+			$conditions = \App\Json::decode($conditions);
+			if (isset($conditions['fieldName'])) {
+				$queryGenerator->addCondition($conditions['fieldName'], $conditions['value'], $conditions['operator'], $conditions['group'] ?? true, true);
+			} else {
+				foreach ($conditions as $condition) {
+					$queryGenerator->addCondition($condition['fieldName'], $condition['value'], $condition['operator'], $condition['group'] ?? true, true);
+				}
+			}
 		}
 		$queryGenerator->setLimit(++$limit);
 		$queryGenerator->setOffset($offset);

@@ -35,7 +35,7 @@ class ModTracker
 	 * @var array
 	 */
 	public static $iconActions = [
-		0 => 'fas fa-edit',
+		0 => 'yfi yfi-full-editing-view',
 		1 => 'fas fa-trash-alt',
 		2 => 'fas fa-plus',
 		3 => 'fas fa-undo-alt',
@@ -45,7 +45,7 @@ class ModTracker
 		7 => 'fas fa-th-list',
 		8 => 'fas fa-archive',
 		9 => 'fas fa-eraser',
-		10 => 'fas fa-edit',
+		10 => 'yfi yfi-full-editing-view',
 		11 => 'fas fa-trash-alt',
 		12 => 'fas fa-unlink',
 		13 => 'fas fa-link',
@@ -102,13 +102,6 @@ class ModTracker
 	public function moduleHandler($moduleName, $eventType)
 	{
 		if ('module.postinstall' === $eventType) {
-			\App\Db::getInstance()->createCommand()->update('vtiger_tab', ['customized' => 0], ['name' => $moduleName])->execute();
-			Settings_Vtiger_Module_Model::addSettingsField('LBL_OTHER_SETTINGS', [
-				'name' => 'ModTracker',
-				'iconpath' => 'adminIcon-modules-track-chanegs',
-				'description' => 'LBL_MODTRACKER_DESCRIPTION',
-				'linkto' => 'index.php?module=ModTracker&action=BasicSettings&parenttab=Settings&formodule=ModTracker',
-			]);
 		} elseif ('module.disabled' === $eventType) {
 			\App\EventHandler::setInActive('ModTracker_ModTrackerHandler_Handler');
 		} elseif ('module.enabled' === $eventType) {

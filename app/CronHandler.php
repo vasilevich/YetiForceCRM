@@ -17,9 +17,36 @@ namespace App;
 abstract class CronHandler
 {
 	/**
+	 * Cron task instance.
+	 *
+	 * @var \vtlib\Cron
+	 */
+	protected $cronTask;
+
+	/**
 	 * Main function to execute task.
 	 *
 	 * @return void
 	 */
 	abstract public function process();
+
+	/**
+	 * Construct.
+	 *
+	 * @param \vtlib\Cron $cronTask
+	 */
+	public function __construct(\vtlib\Cron $cronTask)
+	{
+		$this->cronTask = $cronTask;
+	}
+
+	/**
+	 * Check cron task timeout.
+	 *
+	 * @return bool
+	 */
+	public function checkTimeout(): bool
+	{
+		return $this->cronTask->checkTimeout();
+	}
 }

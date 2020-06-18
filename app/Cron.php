@@ -44,6 +44,28 @@ class Cron
 	 * @var bool Flag to keep log file after run finish
 	 */
 	public static $keepLogFile = false;
+	/**
+	 * Max execution cron time.
+	 *
+	 * @var int
+	 */
+	private static $maxExecutionCronTime;
+	/**
+	 * @var int status disabled
+	 */
+	const STATUS_DISABLED = 0;
+	/**
+	 * @var int status enabled
+	 */
+	const STATUS_ENABLED = 1;
+	/**
+	 * @var int status running
+	 */
+	const STATUS_RUNNING = 2;
+	/**
+	 * @var int status completed
+	 */
+	const STATUS_COMPLETED = 3;
 
 	/**
 	 * Init and configure object.
@@ -57,7 +79,7 @@ class Cron
 		YetiForce\Shop::generateCache();
 		if ('test' !== \Config\Main::$systemMode) {
 			YetiForce\Register::check();
-			YetiForce\Status::send();
+			YetiForce\Watchdog::send();
 		}
 		if (!(static::$logActive = \App\Config::debug('DEBUG_CRON'))) {
 			return;
@@ -84,7 +106,7 @@ class Cron
 		if (!static::$logActive) {
 			return;
 		}
-		if ('warning' === $level || 'error' === $level) {
+		if ('error' === $level) {
 			static::$keepLogFile = true;
 		}
 		if ($indent) {
@@ -130,5 +152,54 @@ class Cron
 	public function getCronExecutionTime()
 	{
 		return static::$cronTimeStart ? round(microtime(true) - static::$cronTimeStart, 2) : null;
+	}
+
+	/**
+	 * Update cron task status by name.
+	 *
+	 * @param int    $status
+	 * @param string $name
+	 *
+	 * @return void
+	 */
+	public static function updateStatus(int $status, string $name): void
+	{
+		switch ((int) $status) {
+			case self::STATUS_DISABLED:
+			case self::STATUS_ENABLED:
+			case self::STATUS_RUNNING:
+				break;
+			default:
+				throw new \App\Exceptions\AppException('Invalid status');
+		}
+		\App\Db::getInstance()->createCommand()->update('vtiger_cron_task', ['status' => $status], ['name' => $name])->execute();
+	}
+
+	/**
+	 * Get max execution cron time.
+	 *
+	 * @return int
+	 */
+	public static function getMaxExecutionTime(): int
+	{
+		if (isset(self::$maxExecutionCronTime)) {
+			return self::$maxExecutionCronTime;
+		}
+		$maxExecutionTime = (int) \App\Config::main('maxExecutionCronTime');
+		$iniMaxExecutionTime = (int) ini_get('max_execution_time');
+		if (0 !== $iniMaxExecutionTime && $iniMaxExecutionTime < $maxExecutionTime) {
+			$maxExecutionTime = $iniMaxExecutionTime;
+		}
+		return self::$maxExecutionCronTime = $maxExecutionTime;
+	}
+
+	/**
+	 * Check max execution cron time.
+	 *
+	 * @return bool
+	 */
+	public function checkCronTimeout(): bool
+	{
+		return time() >= (self::getMaxExecutionTime() + self::$cronTimeStart);
 	}
 }

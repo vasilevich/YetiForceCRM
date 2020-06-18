@@ -1,16 +1,10 @@
 {*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
-{if $WIDTHTYPE eq 'narrow'}
-	{assign var=WIDTHTYPE_GROUP value="input-group-sm"}
-{elseif $WIDTHTYPE eq 'wide'}
-	{assign var=WIDTHTYPE_GROUP value="input-group-lg"}
-{else}
-	{assign var=WIDTHTYPE_GROUP value=''}
-{/if}
 <div class='verticalScroll'>
 	<div class="editViewContainer">
 		<form class="form-horizontal recordEditView" id="EditView" name="EditView" method="post" action="index.php"
 			  enctype="multipart/form-data">
+			<input type="hidden" id="preSaveValidation" value="{!empty(\App\EventHandler::getByType(\App\EventHandler::EDIT_VIEW_PRE_SAVE, $MODULE_NAME))}"/>
 			{if !empty($PICKIST_DEPENDENCY_DATASOURCE)}
 				<input type="hidden" name="picklistDependency"
 					   value='{\App\Purifier::encodeHtml($PICKIST_DEPENDENCY_DATASOURCE)}'/>
@@ -61,13 +55,12 @@
 				{assign var=BLOCKS_HIDE value=$BLOCK->isHideBlock($RECORD,$VIEW)}
 				{assign var=IS_HIDDEN value=$BLOCK->isHidden()}
 				{assign var=IS_DYNAMIC value=$BLOCK->isDynamic()}
-				{assign var=WIDTHTYPE value=$USER_MODEL->get('rowheight')}
 				{if $BLOCKS_HIDE}
 					<div class="c-panel form-row js-toggle-panel row mx-1 mb-3"
 						 data-js="click|data-dynamic" {if $IS_DYNAMIC} data-dynamic="true"{/if}
 						 data-label="{$BLOCK_LABEL}">
 						<div class="blockHeader c-panel__header align-items-center">
-							{if !empty($APIADDRESS_ACTIVE) && ($BLOCK_LABEL eq 'LBL_ADDRESS_INFORMATION' || $BLOCK_LABEL eq 'LBL_ADDRESS_MAILING_INFORMATION' || $BLOCK_LABEL eq 'LBL_ADDRESS_DELIVERY_INFORMATION')}
+							{if !empty($APIADDRESS_ACTIVE) && in_array($BLOCK_LABEL,$ADDRESS_BLOCK_LABELS)}
 								{assign var=APIADDRESFIELD value=TRUE}
 							{else}
 								{assign var=APIADDRESFIELD value=FALSE}
@@ -102,7 +95,7 @@
 								<div class="{if $FIELD_MODEL->getUIType() neq "300"} col-sm-6 form-row align-items-center my-1 mx-0 {else} w-100 {/if}">
 									{if $FIELD_MODEL->getUIType() neq "300"}
 										<div class="col-lg-12 col-xl-3 text-lg-left text-xl-right fieldLabel  {$WIDTHTYPE}">
-											<label class="u-text-small-bold m-0 pr-1">
+											<label class="flCT_{$MODULE_NAME}_{$FIELD_MODEL->getFieldName()} u-text-small-bold m-0 pr-1">
 												{if $FIELD_MODEL->isMandatory() eq true}
 													<span class="redColor">*</span>
 												{/if}

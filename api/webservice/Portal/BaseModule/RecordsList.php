@@ -1,13 +1,20 @@
 <?php
-
-namespace Api\Portal\BaseModule;
-
 /**
- * Get record list class.
+ * Get record list file.
+ *
+ * @package Api
  *
  * @copyright YetiForce Sp. z o.o
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ */
+
+namespace Api\Portal\BaseModule;
+
+use OpenApi\Annotations as OA;
+
+/**
+ * Get record list class.
  */
 class RecordsList extends \Api\Core\BaseAction
 {
@@ -19,33 +26,147 @@ class RecordsList extends \Api\Core\BaseAction
 	public $allowedHeaders = ['x-condition', 'x-row-offset', 'x-row-limit', 'x-fields', 'x-row-order-field', 'x-row-order', 'x-parent-id'];
 
 	/**
-	 * Get method.
+	 * Get record list method.
 	 *
 	 * @return array
+	 *
+	 * @OA\GET(
+	 *		path="/webservice/{moduleName}/RecordsList",
+	 *		summary="Get the list of records",
+	 *		tags={"BaseModule"},
+	 *		security={
+	 *			{"basicAuth" : "", "ApiKeyAuth" : "", "token" : ""}
+	 *		},
+	 *		@OA\RequestBody(
+	 *			required=false,
+	 *			description="The content of the request is empty",
+	 *		),
+	 *		@OA\Parameter(
+	 *			name="moduleName",
+	 *			description="Module name",
+	 *			@OA\Schema(type="string"),
+	 *			in="path",
+	 *			example="Contacts",
+	 *			required=true
+	 *		),
+	 *		@OA\Parameter(
+	 *			name="x-raw-data",
+	 *			description="Get rows limit, default: 0",
+	 *			@OA\Schema(type="integer", enum={0, 1}),
+	 *			in="header",
+	 *			example=1,
+	 *			required=false
+	 *		),
+	 *		@OA\Parameter(
+	 *			name="x-row-limit",
+	 *			description="Get rows limit, default: 1000",
+	 *			@OA\Schema(type="integer"),
+	 *			in="header",
+	 *			example=1000,
+	 *			required=false
+	 *		),
+	 *		@OA\Parameter(
+	 *			name="x-row-offset",
+	 *			description="Offset, default: 0",
+	 *			@OA\Schema(type="integer"),
+	 *			in="header",
+	 *			example=0,
+	 *			required=false
+	 *		),
+	 *		@OA\Parameter(
+	 *			name="x-row-order-field",
+	 *			description="Sets the ORDER BY part of the query record list",
+	 *			@OA\Schema(type="string"),
+	 *			in="header",
+	 *			example="lastname",
+	 *			required=false
+	 *		),
+	 *		@OA\Parameter(
+	 *			name="x-row-order",
+	 *			description="Sorting direction",
+	 *			@OA\Schema(type="string", enum={"ASC", "DESC"}),
+	 *			in="header",
+	 *			example="DESC",
+	 *			required=false
+	 *		),
+	 *		@OA\Parameter(
+	 *			name="x-fields",
+	 *			description="JSON array in the list of fields to be returned in response",
+	 *			in="header",
+	 *			example={},
+	 *			required=false,
+	 *			@OA\JsonContent(
+	 *				type="array",
+	 * 				@OA\Items(type="string"),
+	 * 			)
+	 *		),
+	 *		@OA\Parameter(
+	 *			name="x-condition",
+	 * 			description="Conditions [Json format]",
+	 *			in="header",
+	 *			required=false,
+	 *			@OA\JsonContent(
+	 *				description="Conditions details",
+	 *				type="object",
+	 *				@OA\Property(property="fieldName", description="Field name", type="string", example="lastname"),
+	 *				@OA\Property(property="value", description="Search value", type="string", example="Kowalski"),
+	 *				@OA\Property(property="operator", description="Field operator", type="string", example="e"),
+	 *				@OA\Property(property="group", description="Condition group if true is AND", type="boolean", example=true),
+	 *			),
+	 *		),
+	 *		@OA\Parameter(
+	 *			name="x-parent-id",
+	 *			description="Parent record id",
+	 *			@OA\Schema(type="integer"),
+	 *			in="header",
+	 *			example=5,
+	 *			required=false
+	 *		),
+	 *		@OA\Response(
+	 *			response=200,
+	 *			description="List of consents",
+	 *			@OA\JsonContent(ref="#/components/schemas/BaseModule_RecordsList_ResponseBody"),
+	 *			@OA\MediaType(
+	 *				mediaType="text/html",
+	 *				@OA\Schema(ref="#/components/schemas/BaseModule_RecordsList_ResponseBody")
+	 *			),
+	 *		),
+	 *),
+	 * @OA\Schema(
+	 *		schema="BaseModule_RecordsList_ResponseBody",
+	 *		title="Base module - Response action record list",
+	 *		description="Module action record list response body",
+	 *		type="object",
+	 *		@OA\Property(
+	 *			property="status",
+	 *			description="A numeric value of 0 or 1 that indicates whether the communication is valid. 1 - success , 0 - error",
+	 *			enum={"0", "1"},
+	 *			type="integer",
+	 *		),
+	 *
+	 *	),
 	 */
 	public function get()
 	{
-		$rawData = $records = $headers = [];
 		$queryGenerator = $this->getQuery();
 		$fieldsModel = $queryGenerator->getListViewFields();
 		$limit = $queryGenerator->getLimit();
+		$isRawData = $this->isRawData();
+		$response = [
+			'headers' => $this->getColumnNames($fieldsModel),
+			'records' => [],
+		];
 		$dataReader = $queryGenerator->createQuery()->createCommand()->query();
 		while ($row = $dataReader->read()) {
-			$records[$row['id']] = $this->getRecordFromRow($row, $fieldsModel);
-			if ($this->isRawData()) {
-				$rawData[$row['id']] = $this->getRawDataFromRow($row);
+			$response['records'][$row['id']] = $this->getRecordFromRow($row, $fieldsModel);
+			if ($isRawData) {
+				$response['rawData'][$row['id']] = $this->getRawDataFromRow($row);
 			}
 		}
 		$dataReader->close();
-		$headers = $this->getColumnNames($fieldsModel);
-		$rowsCount = \count($records);
-		return [
-			'headers' => $headers,
-			'records' => $records,
-			'rawData' => $rawData,
-			'count' => $rowsCount,
-			'isMorePages' => $rowsCount === $limit,
-		];
+		$response['count'] = \count($response['records']);
+		$response['isMorePages'] = $response['count'] === $limit;
+		return $response;
 	}
 
 	/**
@@ -63,9 +184,11 @@ class RecordsList extends \Api\Core\BaseAction
 		if ($requestLimit = $this->controller->request->getHeader('x-row-limit')) {
 			$limit = (int) $requestLimit;
 		}
+
 		if ($orderField = $this->controller->request->getHeader('x-row-order-field')) {
 			$queryGenerator->setOrder($orderField, $this->controller->request->getHeader('x-row-order'));
 		}
+
 		$offset = 0;
 		if ($requestOffset = $this->controller->request->getHeader('x-row-offset')) {
 			$offset = (int) $requestOffset;
@@ -76,6 +199,7 @@ class RecordsList extends \Api\Core\BaseAction
 			$queryGenerator->setFields(\App\Json::decode($requestFields));
 			$queryGenerator->setField('id');
 		}
+
 		if ($conditions = $this->controller->request->getHeader('x-condition')) {
 			$conditions = \App\Json::decode($conditions);
 			if (isset($conditions['fieldName'])) {

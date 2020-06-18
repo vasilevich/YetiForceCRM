@@ -1,7 +1,6 @@
 {*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	{include file=\App\Layout::getTemplatePath('ListViewAlphabet.tpl', $RELATED_MODULE_NAME) MODULE_MODEL=$RELATED_MODULE}
-	{assign var=WIDTHTYPE value=$USER_MODEL->get('rowheight')}
 	<div class="listViewEntriesDiv u-overflow-scroll-non-desktop contents-bottomscroll">
 		<table class="table tableBorderHeadBody listViewEntriesTable {if $VIEW_MODEL && !$VIEW_MODEL->isEmpty('entityState')}listView{$VIEW_MODEL->get('entityState')}{/if}">
 			<thead>
@@ -133,24 +132,23 @@
 				</tr>
 			{/foreach}
 			</tbody>
-			<tfoot class="listViewSummation">
-			<tr>
-				<td></td>
-				{foreach item=HEADER_FIELD from=$RELATED_HEADERS}
-					<td {if $HEADER_FIELD@last} colspan="2" {/if}
-							class="noWrap {if !empty($HEADER_FIELD->isCalculateField())}border{/if}">
-						{if !empty($HEADER_FIELD->isCalculateField())}
-							<button class="btn btn-sm btn-light js-popover-tooltip" data-js="popover" type="button"
-									data-operator="sum" data-field="{$HEADER_FIELD->getName()}"
-									data-content="{\App\Language::translate('LBL_CALCULATE_SUM_FOR_THIS_FIELD')}">
-								<span class="fas fa-signal"></span>
-							</button>
-							<span class="calculateValue"></span>
-						{/if}
-					</td>
-				{/foreach}
-			</tr>
-			</tfoot>
+			{if !empty($SHOW_SUMMATION_ROW)}
+				<tfoot class="listViewSummation">
+					<tr>
+						<td></td>
+						{foreach item=HEADER_FIELD from=$RELATED_HEADERS}
+							<td {if $HEADER_FIELD@last} colspan="2" {/if} class="noWrap {if !empty($HEADER_FIELD->isCalculateField())}border{/if}">
+								{if !empty($HEADER_FIELD->isCalculateField())}
+									<button class="btn btn-sm btn-light js-popover-tooltip" data-js="popover" type="button" data-operator="sum" data-field="{$HEADER_FIELD->getName()}" data-content="{\App\Language::translate('LBL_CALCULATE_SUM_FOR_THIS_FIELD')}">
+										<span class="fas fa-signal"></span>
+									</button>
+									<span class="calculateValue"></span>
+								{/if}
+							</td>
+						{/foreach}
+					</tr>
+				</tfoot>
+			{/if}
 		</table>
 	</div>
 	{foreach key=index item=jsModel from=$RELATED_SCRIPTS}

@@ -74,17 +74,13 @@ class Login extends \Api\Core\BaseAction
 	 *        name="X-ENCRYPTED",
 	 *        in="header",
 	 *        required=true,
-	 * 				@OA\Schema(ref="#/components/schemas/X-ENCRYPTED")
+	 * 			@OA\Schema(ref="#/components/schemas/X-ENCRYPTED")
 	 *    ),
 	 *		@OA\Response(
-	 *				response=200,
-	 *				description="User details",
-	 *				@OA\JsonContent(ref="#/components/schemas/UsersLoginResponseBody"),
-	 *				@OA\XmlContent(ref="#/components/schemas/UsersLoginResponseBody"),
-	 *     		@OA\MediaType(
-	 *         		mediaType="text/html",
-	 *         		@OA\Schema(ref="#/components/schemas/UsersLoginResponseBody")
-	 *     		),
+	 *			response=200,
+	 *			description="User details",
+	 *			@OA\JsonContent(ref="#/components/schemas/UsersLoginResponseBody"),
+	 *			@OA\XmlContent(ref="#/components/schemas/UsersLoginResponseBody"),
 	 *		),
 	 *		@OA\Response(
 	 *				response=401,
@@ -292,7 +288,6 @@ class Login extends \Api\Core\BaseAction
 			'params' => \App\Json::encode($params),
 		])->execute();
 		$row['language'] = $language;
-		$db->createCommand()->delete('w_#__portal_session', ['<', 'changed', date(static::DATE_TIME_FORMAT, strtotime('-1 day'))])->execute();
 		return $row;
 	}
 }
